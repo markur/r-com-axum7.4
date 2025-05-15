@@ -29,4 +29,4 @@ COPY --from=builder /app/.env .
 ENV RUST_LOG=info
 EXPOSE 3000
 
-CMD ["./backend"] 
+CMD ["./backend"]   

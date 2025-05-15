@@ -15,7 +15,7 @@ jsonwebtoken = "9"
 stripe = "0.0.5"
 tracing = "0.1"
 tracing-subscriber = "0.3"
-oath = "0.10.2"
+oath = "0.15.0"
 base32 = "0.4"
 rand = "0.8"
 
@@ -23,4 +23,5 @@ rand = "0.8"
 lto = true
 codegen-units = 1
 opt-level = 'z'
-panic = 'abort' 
+panic = 'abort'
+
