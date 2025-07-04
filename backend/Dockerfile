@@ -1,21 +1,25 @@
 # ---- Build Stage ----
-FROM rust:1.76 as builder
+FROM rust:latest as builder
 WORKDIR /app
 
 # Install required tools for SQLx offline mode
-RUN cargo install sqlx-cli --no-default-features --features postgres
+# RUN cargo install sqlx-cli --version 0.7.4 --no-default-features --features postgres
 
-# Cache dependencies
+# Cache dependencies layer: copy manifest and build deps only
 COPY Cargo.toml Cargo.lock ./
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
+# Create a temporary src directory with a stub main.rs for dependency caching
+RUN mkdir src && echo "fn main() {println!(\"stub\")}" > src/main.rs
+RUN cargo fetch
+# Remove the stub before copying real source
+RUN rm -rf src
 
-# Copy source
+# Copy full source and build
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --bin backend
 
 # ---- Runtime Stage ----
-FROM debian:bullseye-slim
+# Use Bookworm to match newer glibc used by rust:latest build image
+FROM debian:bookworm-slim
 WORKDIR /app
 
 # Install openssl and ca-certificates

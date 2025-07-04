@@ -23,7 +23,7 @@ pub struct ProductInput {
     pub inventory: i32,
 }
 
-pub fn admin_product_routes(app_state: Arc<AppState>) -> Router<Arc<AppState>> {
+pub fn admin_product_routes(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/api/admin/products", get(list_products).post(create_product))
         .route("/api/admin/products/:id", put(update_product).delete(delete_product))

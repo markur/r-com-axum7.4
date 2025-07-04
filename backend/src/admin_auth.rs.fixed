@@ -81,7 +81,7 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub fn admin_auth_routes(app_state: Arc<AppState>) -> Router<Arc<AppState>> {
+pub fn admin_auth_routes(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/api/admin/register", post(register_admin))
         .route("/api/admin/login", post(login_admin))
