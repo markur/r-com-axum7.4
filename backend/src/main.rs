@@ -3,12 +3,14 @@ use axum::{
     extract::State,
     routing::{get, post},
     Json, Router,
+    server::conn::Listener,
 };
+use tokio::net::TcpListener;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 use std::{env, net::SocketAddr, sync::Arc};
 use dotenv::dotenv;
-// Using stripe crate (renamed async-stripe in Cargo.toml)
+// Using stripe crate (renamed async-stripe v0.23.0 in Cargo.toml)
 use stripe::{Client as StripeClient, PaymentIntent, CreatePaymentIntent as PaymentIntentCreateParams, Currency};
 use sqlx::types::chrono::NaiveDateTime;
 
@@ -40,7 +42,7 @@ async fn main() {
 
     // --- Set up Stripe client ---
     let stripe_secret = std::env::var("STRIPE_SECRET_KEY").expect("STRIPE_SECRET_KEY must be set");
-    // Initialize Stripe client with async-stripe v0.21.0 API
+    // Initialize Stripe client with async-stripe v0.23.0 API
     let stripe_client = StripeClient::new(stripe_secret);
     
     // --- JWT secret for authentication ---
@@ -62,14 +64,17 @@ async fn main() {
         .merge(admin_products::admin_product_routes(app_state.clone()))// Admin product management
         .with_state(app_state);                                       // Attach shared state
 
-    // --- Start the HTTP server using axum 0.7 API ---
+    // --- Start the HTTP server using axum 0.8.4 API ---
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Backend running at http://{}", addr);
     
-    // Create a TCP listener and convert app to appropriate service
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    let service = app.into_service();
-    axum::serve(listener, service).await.unwrap();
+    // Axum 0.8.4 server setup
+    let listener = TcpListener::bind(addr).await.unwrap();
+    
+    println!("Starting server on {addr}");
+
+    // This is the correct way to run an axum 0.8.4 server
+    axum::serve(listener, app).await.unwrap();
 }
 
 // --- Health check endpoint ---
@@ -100,18 +105,18 @@ struct CreatePaymentIntentResponse {
 }
 
 // --- Example: create-payment-intent handler ---
-// Accepts Stripe client and creates a PaymentIntent using the stripe-rust API
+// Accepts Stripe client and creates a PaymentIntent using the async-stripe v0.23.0 API
 async fn create_payment_intent(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreatePaymentIntentRequest>,
 ) -> Result<Json<CreatePaymentIntentResponse>, (axum::http::StatusCode, String)> {
-    // Create payment intent params according to async-stripe API
-    let mut params = PaymentIntentCreateParams {
-        amount: Some(payload.amount),
-        currency: Some(payload.currency.parse().unwrap_or(Currency::USD)),
-        ..Default::default()
-    };
+    // Create the params with required parameters in constructor
+    let mut params = PaymentIntentCreateParams::new(
+        payload.amount, 
+        payload.currency.parse().unwrap_or(Currency::USD)
+    );
     params.payment_method_types = Some(vec!["card".to_string()]);
+    
     match PaymentIntent::create(&state.stripe_client, params).await {
         Ok(intent) => Ok(Json(CreatePaymentIntentResponse {
             client_secret: intent.client_secret.unwrap_or_default(),

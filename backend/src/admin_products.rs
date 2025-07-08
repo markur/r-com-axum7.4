@@ -1,6 +1,8 @@
-use axum::{Json, Router, routing::{get, post, put, delete}, extract::{Path, State}};
+use axum::{Json, Router, routing::{get, put}, extract::{Path, State}};
+// Removed unused imports: post, delete
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+// PgPool accessed through AppState
+// use sqlx::PgPool;
 use std::sync::Arc;
 use crate::admin_auth::AuthenticatedAdmin;
 use crate::AppState;

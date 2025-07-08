@@ -1,7 +1,9 @@
-use axum::{Json, extract::State, http::StatusCode, routing::{post, Router}, async_trait, extract::{FromRequestParts}, http::{request::Parts}};
+use axum::{Json, extract::State, http::StatusCode, routing::{post, Router}, extract::{FromRequestParts}, http::{request::Parts}};
+use async_trait::async_trait;
 use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+// PgPool accessed through AppState
+// use sqlx::PgPool;
 use crate::AppState;
 use argon2::{self, password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
 use totp_rs::{TOTP, Secret, Algorithm};
@@ -58,8 +60,8 @@ where
 {
     type Rejection = (StatusCode, String);
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, _state)
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, state)
             .await
             .map_err(|_| (StatusCode::UNAUTHORIZED, "Missing or invalid Authorization header".to_string()))?;
         let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "supersecretjwtkey".to_string());

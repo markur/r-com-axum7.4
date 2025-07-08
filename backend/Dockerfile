@@ -3,7 +3,7 @@ FROM rust:latest as builder
 WORKDIR /app
 
 # Install required tools for SQLx offline mode
-# RUN cargo install sqlx-cli --version 0.7.4 --no-default-features --features postgres
+# RUN cargo install sqlx-cli --version 0.7.3 --no-default-features --features postgres
 
 # Cache dependencies layer: copy manifest and build deps only
 COPY Cargo.toml Cargo.lock ./
@@ -15,7 +15,10 @@ RUN rm -rf src
 
 # Copy full source and build
 COPY . .
-RUN cargo build --release --bin backend
+# Build and verify the binary exists
+RUN cargo build --release --bin backend && \
+    ls -la /app/target/release && \
+    test -f /app/target/release/backend
 
 # ---- Runtime Stage ----
 # Use Bookworm to match newer glibc used by rust:latest build image
@@ -25,8 +28,9 @@ WORKDIR /app
 # Install openssl and ca-certificates
 RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled binary from the builder
-COPY --from=builder /app/target/release/backend .
+# Copy the compiled binary from the builder and verify it exists
+COPY --from=builder /app/target/release/backend ./backend
+RUN ls -la /app && test -f /app/backend && chmod +x /app/backend
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/.env .
 
