@@ -3,9 +3,8 @@ use axum::{
     extract::State,
     routing::{get, post},
     Json, Router,
-    server::conn::Listener,
 };
-use tokio::net::TcpListener;
+use axum::Server;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 use std::{env, net::SocketAddr, sync::Arc};
@@ -64,17 +63,20 @@ async fn main() {
         .merge(admin_products::admin_product_routes(app_state.clone()))// Admin product management
         .with_state(app_state);                                       // Attach shared state
 
-    // --- Start the HTTP server using axum 0.8.4 API ---
+    // --- Start the HTTP server using axum 0.7.4 API ---
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Backend running at http://{}", addr);
     
-    // Axum 0.8.4 server setup
-    let listener = TcpListener::bind(addr).await.unwrap();
-    
     println!("Starting server on {addr}");
-
-    // This is the correct way to run an axum 0.8.4 server
-    axum::serve(listener, app).await.unwrap();
+    
+    // Simple pattern for axum 0.7.4 that works reliably
+    println!("Listening on {}", addr);
+    
+    // Let axum handle the server setup
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
 
 // --- Health check endpoint ---

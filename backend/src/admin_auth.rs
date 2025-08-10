@@ -53,6 +53,7 @@ pub struct AuthenticatedAdmin {
     pub username: String,
 }
 
+// This is the correct implementation for axum 0.8.4
 #[async_trait]
 impl<S> FromRequestParts<S> for AuthenticatedAdmin
 where
