@@ -1,5 +1,7 @@
-use axum::{Json, Router, routing::{get, put}, extract::{Path, State}};
-// Removed unused imports: post, delete
+// AXUM 0.7.4 UPDATE: Re-added missing imports
+// The original code had "// Removed unused imports: post, delete" but these are actually used
+// in the router definition below, causing compilation errors. Re-added them.
+use axum::{Json, Router, routing::{get, post, put, delete}, extract::{Path, State}};
 use serde::{Deserialize, Serialize};
 // PgPool accessed through AppState
 // use sqlx::PgPool;

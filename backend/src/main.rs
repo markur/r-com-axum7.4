@@ -1,14 +1,32 @@
+// ============================================================================
+// AXUM VERSION MIGRATION NOTES (0.6 → 0.7.4)
+// ============================================================================
+// This code was originally written for Axum 0.6 but has been updated for 0.7.4
+// 
+// Key Breaking Changes in Axum 0.7+:
+// 1. axum::Server removed → Use axum::serve() with TcpListener
+// 2. .into_make_service() removed → Pass Router directly to axum::serve()
+// 3. Server binding pattern changed → Manual TcpListener creation required
+//
+// Migration Summary:
+// OLD: axum::Server::bind(&addr).serve(app.into_make_service()).await
+// NEW: axum::serve(TcpListener::bind(&addr).await?, app).await
+// ============================================================================
+
 // --- Imports ---
 use axum::{
     extract::State,
     routing::{get, post},
     Json, Router,
 };
-use axum::Server;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
 use std::{env, net::SocketAddr, sync::Arc};
 use dotenv::dotenv;
+// AXUM 0.7.4 UPDATE: Added TcpListener import
+// In Axum 0.7+, axum::Server was removed and replaced with axum::serve()
+// which requires a tokio::net::TcpListener instead of direct SocketAddr binding
+use tokio::net::TcpListener;
 // Using stripe crate (renamed async-stripe v0.23.0 in Cargo.toml)
 use stripe::{Client as StripeClient, PaymentIntent, CreatePaymentIntent as PaymentIntentCreateParams, Currency};
 use sqlx::types::chrono::NaiveDateTime;
@@ -67,14 +85,19 @@ async fn main() {
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Backend running at http://{}", addr);
     
-    println!("Starting server on {addr}");
-    
-    // Simple pattern for axum 0.7.4 that works reliably
+    // AXUM 0.7.4 UPDATE: Server setup pattern changed
+    // OLD (Axum 0.6): axum::Server::bind(&addr).serve(app.into_make_service())
+    // NEW (Axum 0.7+): axum::serve(listener, app) where listener is TcpListener
+    // 
+    // Changes made:
+    // 1. axum::Server was removed - no longer exists in axum 0.7+
+    // 2. into_make_service() was removed - Router can be passed directly to axum::serve()
+    // 3. Must create TcpListener manually and pass to axum::serve()
+    let listener = TcpListener::bind(&addr).await.unwrap();
     println!("Listening on {}", addr);
     
-    // Let axum handle the server setup
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    // Use the new axum::serve() function instead of axum::Server::bind()
+    axum::serve(listener, app)
         .await
         .unwrap();
 }
