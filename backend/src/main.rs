@@ -34,6 +34,8 @@ use sqlx::types::chrono::NaiveDateTime;
 // Module declarations
 mod admin_auth;
 mod admin_products;
+mod square_payments;
+mod letre_email;
 
 // --- Shared application state for all handlers ---
 pub struct AppState {
@@ -73,13 +75,15 @@ async fn main() {
     });
 
     // --- Build the Axum router with all routes and shared state ---
-    let app: Router<Arc<AppState>> = Router::new()
+    let app = Router::new()
         .route("/", get(health_check))                                 // Health check endpoint
         .route("/api/products", get(get_products))                    // Public products endpoint
         .route("/api/create-payment-intent", post(create_payment_intent)) // Stripe payment intent
         .merge(admin_auth::admin_auth_routes(app_state.clone()))       // Admin authentication routes
         .merge(admin_products::admin_product_routes(app_state.clone()))// Admin product management
-        .with_state(app_state);                                       // Attach shared state
+        .merge(square_payments::square_payment_routes(app_state.clone())) // Square payment processing
+        .merge(letre_email::letre_email_routes(app_state.clone()))     // Letre email marketing
+        .with_state(app_state);                                       // Attach shared state, converts Router<Arc<AppState>> -> Router<()>
 
     // --- Start the HTTP server using axum 0.7.4 API ---
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -87,16 +91,17 @@ async fn main() {
     
     // AXUM 0.7.4 UPDATE: Server setup pattern changed
     // OLD (Axum 0.6): axum::Server::bind(&addr).serve(app.into_make_service())
-    // NEW (Axum 0.7+): axum::serve(listener, app) where listener is TcpListener
-    // 
+    // NEW (Axum 0.7+): axum::serve(listener, app)
+    //
     // Changes made:
     // 1. axum::Server was removed - no longer exists in axum 0.7+
-    // 2. into_make_service() was removed - Router can be passed directly to axum::serve()
-    // 3. Must create TcpListener manually and pass to axum::serve()
+    // 2. Must create TcpListener manually and pass to axum::serve()
+    // 3. Router<S>.with_state(S) returns Router<()>, which can be passed directly to axum::serve()
+    // 4. No need for into_make_service() or into_service() - pass Router<()> directly
     let listener = TcpListener::bind(&addr).await.unwrap();
     println!("Listening on {}", addr);
-    
-    // Use the new axum::serve() function instead of axum::Server::bind()
+
+    // Router<()> (after with_state) can be passed directly to axum::serve() in Axum 0.7
     axum::serve(listener, app)
         .await
         .unwrap();

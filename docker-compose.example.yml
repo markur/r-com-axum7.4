@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - '5433:5432'  # Changed host port to 5433 to avoid conflict
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      shm_size: '2gb'
+    command: ./backend
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/ecommerce
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your_stripe_key_here}
+      SQUARE_ACCESS_TOKEN: ${SQUARE_ACCESS_TOKEN:-your_square_access_token_here}
+      SQUARE_APPLICATION_ID: ${SQUARE_APPLICATION_ID:-your_square_application_id_here}
+      SQUARE_ENVIRONMENT: ${SQUARE_ENVIRONMENT:-sandbox}
+      LETRE_API_KEY: ${LETRE_API_KEY:-your_letre_api_key_here}
+      LETRE_API_URL: ${LETRE_API_URL:-https://api.letre.io}
+
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+
+volumes:
+  db_data:
