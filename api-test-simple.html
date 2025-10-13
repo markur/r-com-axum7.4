@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple API Test</title>
+</head>
+<body>
+    <h1>Simple API Test</h1>
+    <button onclick="testAPI()">Test Shipping Rates API</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAPI() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/shipping/rates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from_address: {
+                            name: "Test",
+                            street1: "388 Townsend St",
+                            city: "San Francisco",
+                            state: "CA",
+                            zip: "94107",
+                            country: "US"
+                        },
+                        to_address: {
+                            name: "Test",
+                            street1: "1 E 161st St",
+                            city: "Bronx",
+                            state: "NY",
+                            zip: "10451",
+                            country: "US"
+                        },
+                        parcel: {
+                            length: 10,
+                            width: 8,
+                            height: 4,
+                            weight: 16
+                        }
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                resultEl.textContent = `Status: ${response.status}\n\nResponse:\n${text}`;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultEl.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+    </script>
+</body>
+</html>

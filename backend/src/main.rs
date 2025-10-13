@@ -30,12 +30,16 @@ use tokio::net::TcpListener;
 // Using stripe crate (renamed async-stripe v0.23.0 in Cargo.toml)
 use stripe::{Client as StripeClient, PaymentIntent, CreatePaymentIntent as PaymentIntentCreateParams, Currency};
 use sqlx::types::chrono::NaiveDateTime;
+// CORS support
+use tower_http::cors::{CorsLayer, Any};
 
 // Module declarations
 mod admin_auth;
 mod admin_products;
 mod square_payments;
-mod letre_email;
+mod lettre_email;
+mod textbelt_sms;
+mod easypost_shipping;
 
 // --- Shared application state for all handlers ---
 pub struct AppState {
@@ -74,6 +78,12 @@ async fn main() {
         jwt_secret: jwt_secret.clone(),
     });
 
+    // --- Configure CORS to allow requests from any origin ---
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     // --- Build the Axum router with all routes and shared state ---
     let app = Router::new()
         .route("/", get(health_check))                                 // Health check endpoint
@@ -82,7 +92,10 @@ async fn main() {
         .merge(admin_auth::admin_auth_routes(app_state.clone()))       // Admin authentication routes
         .merge(admin_products::admin_product_routes(app_state.clone()))// Admin product management
         .merge(square_payments::square_payment_routes(app_state.clone())) // Square payment processing
-        .merge(letre_email::letre_email_routes(app_state.clone()))     // Letre email marketing
+        .merge(lettre_email::lettre_email_routes(app_state.clone()))     // Lettre transactional emails
+        .merge(textbelt_sms::textbelt_sms_routes(app_state.clone()))    // Textbelt SMS notifications
+        .merge(easypost_shipping::easypost_shipping_routes(app_state.clone())) // EasyPost shipping
+        .layer(cors)                                                   // Add CORS middleware
         .with_state(app_state);                                       // Attach shared state, converts Router<Arc<AppState>> -> Router<()>
 
     // --- Start the HTTP server using axum 0.7.4 API ---

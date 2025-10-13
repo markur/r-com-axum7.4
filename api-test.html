@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Com API Testing Page</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 30px; }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1976d2;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .endpoint h3 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        .get { background: #4caf50; color: white; }
+        .post { background: #2196f3; color: white; }
+        .put { background: #ff9800; color: white; }
+        .delete { background: #f44336; color: white; }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea { min-height: 80px; font-family: monospace; }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        button:hover { background: #1565c0; }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #263238;
+            color: #aed581;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow: auto;
+        }
+        .error { color: #ff5252; }
+        .token-display {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 R-Com API Testing Dashboard</h1>
+
+        <!-- Token Storage -->
+        <div class="section">
+            <h2>🔑 JWT Token Storage</h2>
+            <div class="token-display" id="tokenDisplay">No token stored</div>
+            <button onclick="clearToken()">Clear Token</button>
+        </div>
+
+        <!-- Public Endpoints -->
+        <div class="section">
+            <h2>🌐 Public Endpoints</h2>
+
+            <div class="endpoint">
+                <h3><span class="method get">GET</span> / - Health Check</h3>
+                <button onclick="healthCheck()">Test Health Check</button>
+                <div class="response" id="health-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method get">GET</span> /api/products - Get All Products</h3>
+                <button onclick="getProducts()">Get Products</button>
+                <div class="response" id="products-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/create-payment-intent - Stripe Payment</h3>
+                <input type="number" id="stripe-amount" placeholder="Amount in cents (e.g., 1000)" value="1000">
+                <input type="text" id="stripe-currency" placeholder="Currency (e.g., usd)" value="usd">
+                <button onclick="createStripePayment()">Create Payment Intent</button>
+                <div class="response" id="stripe-response"></div>
+            </div>
+        </div>
+
+        <!-- Admin Auth -->
+        <div class="section">
+            <h2>👤 Admin Authentication</h2>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/admin/register - Register Admin</h3>
+                <input type="text" id="reg-username" placeholder="Username">
+                <input type="password" id="reg-password" placeholder="Password">
+                <button onclick="registerAdmin()">Register</button>
+                <div class="response" id="register-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/admin/login - Login Admin</h3>
+                <input type="text" id="login-username" placeholder="Username">
+                <input type="password" id="login-password" placeholder="Password">
+                <button onclick="loginAdmin()">Login</button>
+                <div class="response" id="login-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/admin/totp/verify - Verify TOTP</h3>
+                <p style="background:#e3f2fd; padding:10px; margin:10px 0; border-radius:4px; font-size:13px;">
+                    <strong>📱 How to get the 6-digit code:</strong><br>
+                    1. After Login, copy the "secret" value from the response<br>
+                    2. Open Google Authenticator app on your phone<br>
+                    3. Click "+" → "Enter a setup key"<br>
+                    4. Paste the secret and save<br>
+                    5. The app will show you a 6-digit code - enter it below
+                </p>
+                <input type="text" id="totp-username" placeholder="Username">
+                <input type="text" id="totp-code" placeholder="6-digit TOTP code from authenticator app">
+                <button onclick="verifyTotp()">Verify & Get JWT</button>
+                <div class="response" id="totp-response"></div>
+            </div>
+        </div>
+
+        <!-- Admin Products -->
+        <div class="section">
+            <h2>📦 Admin Product Management (Requires JWT)</h2>
+
+            <div class="endpoint">
+                <h3><span class="method get">GET</span> /api/admin/products - List Products</h3>
+                <button onclick="adminGetProducts()">Get Products (Admin)</button>
+                <div class="response" id="admin-products-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/admin/products - Create Product</h3>
+                <input type="text" id="create-name" placeholder="Product name">
+                <input type="text" id="create-desc" placeholder="Description">
+                <input type="number" id="create-price" placeholder="Price" step="0.01">
+                <input type="number" id="create-inventory" placeholder="Inventory">
+                <button onclick="createProduct()">Create Product</button>
+                <div class="response" id="create-product-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method put">PUT</span> /api/admin/products/:id - Update Product</h3>
+                <input type="number" id="update-id" placeholder="Product ID">
+                <input type="text" id="update-name" placeholder="Product name">
+                <input type="text" id="update-desc" placeholder="Description">
+                <input type="number" id="update-price" placeholder="Price" step="0.01">
+                <input type="number" id="update-inventory" placeholder="Inventory">
+                <button onclick="updateProduct()">Update Product</button>
+                <div class="response" id="update-product-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method delete">DELETE</span> /api/admin/products/:id - Delete Product</h3>
+                <input type="number" id="delete-id" placeholder="Product ID">
+                <button onclick="deleteProduct()">Delete Product</button>
+                <div class="response" id="delete-product-response"></div>
+            </div>
+        </div>
+
+        <!-- Square Payments -->
+        <div class="section">
+            <h2>💳 Square Payments</h2>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/square/create-payment - Create Square Payment</h3>
+                <p style="background:#d1f2eb; padding:10px; margin:10px 0; border-radius:4px; font-size:13px;">
+                    <strong>✅ Sandbox Mode Active:</strong><br>
+                    You can now use the test card nonce below to simulate payments.<br>
+                    Test nonce: <code>cnon:card-nonce-ok</code> (already filled in)
+                </p>
+                <input type="number" id="square-amount" placeholder="Amount (cents)" value="100">
+                <input type="text" id="square-currency" placeholder="Currency" value="USD">
+                <input type="text" id="square-source" placeholder="Card nonce" value="cnon:card-nonce-ok">
+                <button onclick="createSquarePayment()">Create Square Payment</button>
+                <div class="response" id="square-payment-response"></div>
+            </div>
+        </div>
+
+        <!-- Lettre Transactional Emails -->
+        <div class="section">
+            <h2>📧 Lettre Transactional Emails</h2>
+            <p style="background:#e3f2fd; padding:10px; margin:10px 0; border-radius:4px; font-size:13px;">
+                <strong>📨 Using lettre.rs:</strong> SMTP-based transactional email system<br>
+                Configure SMTP settings in environment variables to send emails
+            </p>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/email/send - Send Generic Email</h3>
+                <input type="email" id="email-to" placeholder="Recipient email">
+                <input type="text" id="email-to-name" placeholder="Recipient name (optional)">
+                <input type="text" id="email-subject" placeholder="Subject">
+                <textarea id="email-body" placeholder="Email body"></textarea>
+                <label><input type="checkbox" id="email-html"> Send as HTML</label>
+                <button onclick="sendGenericEmail()">Send Email</button>
+                <div class="response" id="send-email-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/email/order-confirmation - Order Confirmation</h3>
+                <input type="email" id="order-email" placeholder="Customer email">
+                <input type="text" id="order-name" placeholder="Customer name">
+                <input type="text" id="order-id" placeholder="Order ID" value="ORD-12345">
+                <input type="number" id="order-total" placeholder="Order total" value="99.99" step="0.01">
+                <button onclick="sendOrderConfirmation()">Send Order Confirmation</button>
+                <div class="response" id="order-confirmation-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/email/password-reset - Password Reset</h3>
+                <input type="email" id="reset-email" placeholder="User email">
+                <input type="text" id="reset-name" placeholder="User name (optional)">
+                <input type="text" id="reset-token" placeholder="Reset token" value="abc123xyz">
+                <input type="text" id="reset-url" placeholder="Reset URL" value="https://example.com/reset?token=abc123xyz">
+                <button onclick="sendPasswordReset()">Send Password Reset</button>
+                <div class="response" id="password-reset-response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3><span class="method post">POST</span> /api/email/welcome - Welcome Email</h3>
+                <input type="email" id="welcome-email" placeholder="New user email">
+                <input type="text" id="welcome-name" placeholder="New user name">
+                <button onclick="sendWelcome()">Send Welcome Email</button>
+                <div class="response" id="welcome-response"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jwtToken = localStorage.getItem('jwt_token') || '';
+        updateTokenDisplay();
+
+        function updateTokenDisplay() {
+            const display = document.getElementById('tokenDisplay');
+            if (jwtToken) {
+                display.innerHTML = `<strong>Token:</strong> ${jwtToken.substring(0, 50)}...`;
+            } else {
+                display.textContent = 'No token stored';
+            }
+        }
+
+        function clearToken() {
+            jwtToken = '';
+            localStorage.removeItem('jwt_token');
+            updateTokenDisplay();
+        }
+
+        async function apiCall(method, url, body = null, useAuth = false) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (useAuth && jwtToken) {
+                headers['Authorization'] = `Bearer ${jwtToken}`;
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers,
+                    body: body ? JSON.stringify(body) : null
+                });
+
+                // Get response text first, then try to parse as JSON
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = text;
+                }
+
+                return { ok: res.ok, status: res.status, data };
+            } catch (err) {
+                return { ok: false, error: err.message };
+            }
+        }
+
+        function showResponse(elementId, response) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = response.ok
+                ? JSON.stringify(response.data, null, 2)
+                : `<span class="error">Error ${response.status}: ${JSON.stringify(response.data || response.error, null, 2)}</span>`;
+        }
+
+        const API_BASE = 'http://localhost:3000';
+
+        // Public Endpoints
+        async function healthCheck() {
+            const res = await fetch(`${API_BASE}/`);
+            const text = await res.text();
+            document.getElementById('health-response').textContent = text;
+        }
+
+        async function getProducts() {
+            const res = await apiCall('GET', `${API_BASE}/api/products`);
+            showResponse('products-response', res);
+        }
+
+        async function createStripePayment() {
+            const res = await apiCall('POST', `${API_BASE}/api/create-payment-intent`, {
+                amount: parseInt(document.getElementById('stripe-amount').value),
+                currency: document.getElementById('stripe-currency').value
+            });
+            showResponse('stripe-response', res);
+        }
+
+        // Admin Auth
+        async function registerAdmin() {
+            const res = await apiCall('POST', `${API_BASE}/api/admin/register`, {
+                username: document.getElementById('reg-username').value,
+                password: document.getElementById('reg-password').value
+            });
+            showResponse('register-response', res);
+        }
+
+        async function loginAdmin() {
+            const res = await apiCall('POST', `${API_BASE}/api/admin/login`, {
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value
+            });
+            showResponse('login-response', res);
+        }
+
+        async function verifyTotp() {
+            const res = await apiCall('POST', `${API_BASE}/api/admin/totp/verify`, {
+                username: document.getElementById('totp-username').value,
+                code: document.getElementById('totp-code').value
+            });
+            showResponse('totp-response', res);
+            if (res.ok && res.data.token) {
+                jwtToken = res.data.token;
+                localStorage.setItem('jwt_token', jwtToken);
+                updateTokenDisplay();
+            }
+        }
+
+        // Admin Products
+        async function adminGetProducts() {
+            const res = await apiCall('GET', `${API_BASE}/api/admin/products`, null, true);
+            showResponse('admin-products-response', res);
+        }
+
+        async function createProduct() {
+            const res = await apiCall('POST', `${API_BASE}/api/admin/products`, {
+                name: document.getElementById('create-name').value,
+                description: document.getElementById('create-desc').value,
+                price: parseFloat(document.getElementById('create-price').value),
+                inventory: parseInt(document.getElementById('create-inventory').value)
+            }, true);
+            showResponse('create-product-response', res);
+        }
+
+        async function updateProduct() {
+            const id = document.getElementById('update-id').value;
+            const res = await apiCall('PUT', `${API_BASE}/api/admin/products/${id}`, {
+                name: document.getElementById('update-name').value,
+                description: document.getElementById('update-desc').value,
+                price: parseFloat(document.getElementById('update-price').value),
+                inventory: parseInt(document.getElementById('update-inventory').value)
+            }, true);
+            showResponse('update-product-response', res);
+        }
+
+        async function deleteProduct() {
+            const id = document.getElementById('delete-id').value;
+            const res = await apiCall('DELETE', `${API_BASE}/api/admin/products/${id}`, null, true);
+            showResponse('delete-product-response', res);
+        }
+
+        // Square Payments
+        async function createSquarePayment() {
+            const res = await apiCall('POST', `${API_BASE}/api/square/create-payment`, {
+                amount_money: {
+                    amount: parseInt(document.getElementById('square-amount').value),
+                    currency: document.getElementById('square-currency').value
+                },
+                source_id: document.getElementById('square-source').value
+            });
+            showResponse('square-payment-response', res);
+        }
+
+        // Lettre Transactional Emails
+        async function sendGenericEmail() {
+            const res = await apiCall('POST', `${API_BASE}/api/email/send`, {
+                to: document.getElementById('email-to').value,
+                to_name: document.getElementById('email-to-name').value || null,
+                subject: document.getElementById('email-subject').value,
+                body: document.getElementById('email-body').value,
+                html: document.getElementById('email-html').checked
+            });
+            showResponse('send-email-response', res);
+        }
+
+        async function sendOrderConfirmation() {
+            const res = await apiCall('POST', `${API_BASE}/api/email/order-confirmation`, {
+                to: document.getElementById('order-email').value,
+                to_name: document.getElementById('order-name').value || null,
+                order_id: document.getElementById('order-id').value,
+                order_total: parseFloat(document.getElementById('order-total').value),
+                items: [
+                    { name: "Sample Product 1", quantity: 2, price: 29.99 },
+                    { name: "Sample Product 2", quantity: 1, price: 40.01 }
+                ]
+            });
+            showResponse('order-confirmation-response', res);
+        }
+
+        async function sendPasswordReset() {
+            const res = await apiCall('POST', `${API_BASE}/api/email/password-reset`, {
+                to: document.getElementById('reset-email').value,
+                to_name: document.getElementById('reset-name').value || null,
+                reset_token: document.getElementById('reset-token').value,
+                reset_url: document.getElementById('reset-url').value
+            });
+            showResponse('password-reset-response', res);
+        }
+
+        async function sendWelcome() {
+            const res = await apiCall('POST', `${API_BASE}/api/email/welcome`, {
+                to: document.getElementById('welcome-email').value,
+                to_name: document.getElementById('welcome-name').value || null
+            });
+            showResponse('welcome-response', res);
+        }
+    </script>
+</body>
+</html>

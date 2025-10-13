@@ -1,8 +1,11 @@
 # Environment files
 .env
 *.env
+!.env.docker.example
+.env.docker
 backend/.env
 frontend-react/.env
+enthusiast/server/.env
 
 # Node modules
 node_modules/

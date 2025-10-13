@@ -1,0 +1,101 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - '5433:5432'  # Changed host port to 5433 to avoid conflict
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      shm_size: '2gb'
+    command: ./backend
+    env_file:
+      - .env.docker
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+#    volumes:
+#      - ./backend:/app
+
+  # Enthusiast AI Customer Service
+  enthusiast-redis:
+    image: redis:latest
+    restart: always
+
+  enthusiast-api:
+    build:
+      context: ./enthusiast/server/
+      dockerfile: Dockerfile
+    ports:
+      - '10000:10000'
+    env_file:
+      - ./enthusiast/server/.env
+    environment:
+      - PORT=10000
+      - RUN_MIGRATIONS=True
+      - RUN_WORKER=False
+      - RUN_BEAT=False
+      - ECL_DB_HOST=db
+    depends_on:
+      - db
+      - enthusiast-redis
+    restart: always
+
+  enthusiast-worker:
+    build:
+      context: ./enthusiast/server/
+      dockerfile: Dockerfile
+    env_file:
+      - ./enthusiast/server/.env
+    environment:
+      - RUN_MIGRATIONS=False
+      - RUN_WORKER=True
+      - RUN_BEAT=False
+      - ECL_DB_HOST=db
+    depends_on:
+      - enthusiast-redis
+      - db
+      - enthusiast-api
+    restart: always
+
+  enthusiast-beat:
+    build:
+      context: ./enthusiast/server/
+      dockerfile: Dockerfile
+    env_file:
+      - ./enthusiast/server/.env
+    environment:
+      - RUN_MIGRATIONS=False
+      - RUN_WORKER=False
+      - RUN_BEAT=True
+      - ECL_DB_HOST=db
+    depends_on:
+      - enthusiast-redis
+      - db
+      - enthusiast-api
+    restart: always
+
+  enthusiast-frontend:
+    build:
+      context: ./enthusiast/frontend/
+      dockerfile: Dockerfile
+      args:
+        - PORT=10001
+        - VITE_API_BASE=http://localhost:10000
+        - VITE_WS_BASE=ws://localhost:10000
+    ports:
+      - '10001:10001'
+    depends_on:
+      - enthusiast-api
+    restart: always
+
+volumes:
+  db_data: 

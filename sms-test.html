@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Com SMS Testing (Twilio)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            flex: 1;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #666;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+        }
+
+        .quota-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>R-Com SMS Testing</h1>
+
+        <div id="alertContainer"></div>
+
+        <div class="card">
+            <div class="info-box">
+                <h3>📱 SMS Testing (Twilio)</h3>
+                <ul>
+                    <li>Tests SMS sending via Twilio API</li>
+                    <li>Supports US and international numbers</li>
+                    <li>Format: (555) 555-5555 or 5555555555</li>
+                    <li>Trial account: SMS to verified numbers only</li>
+                </ul>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('send')">Send SMS</button>
+                <button class="tab" onclick="showTab('order')">Order Confirmation</button>
+                <button class="tab" onclick="showTab('shipping')">Shipping Update</button>
+                <button class="tab" onclick="showTab('delivery')">Delivery Notice</button>
+            </div>
+
+            <!-- Generic SMS -->
+            <div id="sendTab" class="tab-content active">
+                <h2>Send Generic SMS</h2>
+                <form onsubmit="sendGenericSms(event)">
+                    <div class="form-group">
+                        <label for="sendPhone">Phone Number *</label>
+                        <input type="tel" id="sendPhone" placeholder="(555) 555-5555 or 5555555555" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sendMessage">Message * (max 160 chars recommended)</label>
+                        <textarea id="sendMessage" maxlength="300" placeholder="Your SMS message here..." required></textarea>
+                    </div>
+                    <button type="submit" id="sendBtn">Send SMS</button>
+                </form>
+            </div>
+
+            <!-- Order Confirmation -->
+            <div id="orderTab" class="tab-content">
+                <h2>Order Confirmation SMS</h2>
+                <form onsubmit="sendOrderConfirmation(event)">
+                    <div class="form-group">
+                        <label for="orderPhone">Phone Number *</label>
+                        <input type="tel" id="orderPhone" placeholder="(555) 555-5555" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderId">Order ID *</label>
+                        <input type="text" id="orderId" placeholder="ORD-12345" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderTotal">Order Total ($) *</label>
+                        <input type="number" id="orderTotal" step="0.01" placeholder="99.99" required>
+                    </div>
+                    <button type="submit" id="orderBtn">Send Order Confirmation</button>
+                </form>
+            </div>
+
+            <!-- Shipping Update -->
+            <div id="shippingTab" class="tab-content">
+                <h2>Shipping Update SMS</h2>
+                <form onsubmit="sendShippingUpdate(event)">
+                    <div class="form-group">
+                        <label for="shippingPhone">Phone Number *</label>
+                        <input type="tel" id="shippingPhone" placeholder="(555) 555-5555" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shippingOrderId">Order ID *</label>
+                        <input type="text" id="shippingOrderId" placeholder="ORD-12345" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trackingNumber">Tracking Number *</label>
+                        <input type="text" id="trackingNumber" placeholder="1Z999AA10123456784" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="carrier">Carrier *</label>
+                        <input type="text" id="carrier" placeholder="UPS, FedEx, USPS" required>
+                    </div>
+                    <button type="submit" id="shippingBtn">Send Shipping Update</button>
+                </form>
+            </div>
+
+            <!-- Delivery Notification -->
+            <div id="deliveryTab" class="tab-content">
+                <h2>Delivery Notification SMS</h2>
+                <form onsubmit="sendDeliveryNotification(event)">
+                    <div class="form-group">
+                        <label for="deliveryPhone">Phone Number *</label>
+                        <input type="tel" id="deliveryPhone" placeholder="(555) 555-5555" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliveryOrderId">Order ID *</label>
+                        <input type="text" id="deliveryOrderId" placeholder="ORD-12345" required>
+                    </div>
+                    <button type="submit" id="deliveryBtn">Send Delivery Notification</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        function showAlert(message, type = 'info', quotaRemaining = null) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+
+            if (quotaRemaining !== null) {
+                const quota = document.createElement('div');
+                quota.className = 'quota-info';
+                quota.textContent = `📊 SMS Quota Remaining: ${quotaRemaining}`;
+                alert.appendChild(quota);
+            }
+
+            alertContainer.appendChild(alert);
+            setTimeout(() => alert.remove(), 8000);
+        }
+
+        function showTab(tab) {
+            // Update active tab button
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show corresponding tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function setButtonLoading(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            button.disabled = loading;
+            button.textContent = loading ? 'Sending...' : button.textContent.replace('Sending...', button.textContent);
+        }
+
+        async function sendGenericSms(event) {
+            event.preventDefault();
+            setButtonLoading('sendBtn', true);
+
+            const phone = document.getElementById('sendPhone').value;
+            const message = document.getElementById('sendMessage').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/sms/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, message })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert(data.message, 'success', data.quota_remaining);
+                    event.target.reset();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Failed to send SMS: ${error}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            } finally {
+                setButtonLoading('sendBtn', false);
+            }
+        }
+
+        async function sendOrderConfirmation(event) {
+            event.preventDefault();
+            setButtonLoading('orderBtn', true);
+
+            const phone = document.getElementById('orderPhone').value;
+            const order_id = document.getElementById('orderId').value;
+            const order_total = parseFloat(document.getElementById('orderTotal').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/sms/order-confirmation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, order_id, order_total })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert(data.message, 'success', data.quota_remaining);
+                    event.target.reset();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Failed to send SMS: ${error}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            } finally {
+                setButtonLoading('orderBtn', false);
+            }
+        }
+
+        async function sendShippingUpdate(event) {
+            event.preventDefault();
+            setButtonLoading('shippingBtn', true);
+
+            const phone = document.getElementById('shippingPhone').value;
+            const order_id = document.getElementById('shippingOrderId').value;
+            const tracking_number = document.getElementById('trackingNumber').value;
+            const carrier = document.getElementById('carrier').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/sms/shipping-update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, order_id, tracking_number, carrier })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert(data.message, 'success', data.quota_remaining);
+                    event.target.reset();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Failed to send SMS: ${error}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            } finally {
+                setButtonLoading('shippingBtn', false);
+            }
+        }
+
+        async function sendDeliveryNotification(event) {
+            event.preventDefault();
+            setButtonLoading('deliveryBtn', true);
+
+            const phone = document.getElementById('deliveryPhone').value;
+            const order_id = document.getElementById('deliveryOrderId').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/sms/delivery-notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, order_id })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert(data.message, 'success', data.quota_remaining);
+                    event.target.reset();
+                } else {
+                    const error = await response.text();
+                    showAlert(`Failed to send SMS: ${error}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            } finally {
+                setButtonLoading('deliveryBtn', false);
+            }
+        }
+    </script>
+</body>
+</html>

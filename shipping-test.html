@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyPost Shipping Test - R-Com</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .address-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .address-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button[type="submit"]:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            display: block;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            display: block;
+        }
+
+        .response h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .response pre {
+            background: rgba(0,0,0,0.05);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        .rate-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .rate-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .rate-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .rate-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .rate-detail {
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .rate-detail strong {
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #0c5460;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>EasyPost Shipping Integration Test</h1>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('rates')">Get Shipping Rates</button>
+            <button class="tab" onclick="switchTab('label')">Create Shipping Label</button>
+            <button class="tab" onclick="switchTab('track')">Track Shipment</button>
+            <button class="tab" onclick="switchTab('validate')">Validate Address</button>
+        </div>
+
+        <!-- Get Shipping Rates Tab -->
+        <div id="rates" class="tab-content active">
+            <div class="info-box">
+                <p><strong>Get Shipping Rates:</strong> Compare shipping rates from USPS, UPS, and FedEx for your package.</p>
+                <p>Enter the from/to addresses and parcel dimensions to get real-time shipping quotes.</p>
+            </div>
+
+            <form id="ratesForm">
+                <div class="address-section">
+                    <h3>From Address</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="from_name" value="R-Com Store" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="from_phone" value="+17075551234">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" name="from_street1" value="388 Townsend St" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="from_city" value="San Francisco" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="from_state" value="CA" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ZIP Code</label>
+                            <input type="text" name="from_zip" value="94107" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="from_country" value="US" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="address-section">
+                    <h3>To Address</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="to_name" value="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="to_phone" value="+17075555678">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" name="to_street1" value="1 E 161st St" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="to_city" value="Bronx" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="to_state" value="NY" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ZIP Code</label>
+                            <input type="text" name="to_zip" value="10451" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="to_country" value="US" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="address-section">
+                    <h3>Parcel Dimensions</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Length (inches)</label>
+                            <input type="number" name="parcel_length" value="10" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Width (inches)</label>
+                            <input type="number" name="parcel_width" value="8" step="0.1" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Height (inches)</label>
+                            <input type="number" name="parcel_height" value="4" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (ounces)</label>
+                            <input type="number" name="parcel_weight" value="16" step="0.1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit">Get Shipping Rates</button>
+            </form>
+
+            <div id="ratesResponse" class="response"></div>
+        </div>
+
+        <!-- Create Shipping Label Tab -->
+        <div id="label" class="tab-content">
+            <div class="info-box">
+                <p><strong>Create Shipping Label:</strong> Purchase a shipping label from a selected carrier.</p>
+                <p><strong>Note:</strong> This will charge your EasyPost account. Use test mode for development.</p>
+            </div>
+
+            <form id="labelForm">
+                <div class="address-section">
+                    <h3>From Address</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="from_name" value="R-Com Store" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="from_phone" value="+17075551234">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" name="from_street1" value="388 Townsend St" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="from_city" value="San Francisco" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="from_state" value="CA" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ZIP Code</label>
+                            <input type="text" name="from_zip" value="94107" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="from_country" value="US" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="address-section">
+                    <h3>To Address</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="to_name" value="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="to_phone" value="+17075555678">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" name="to_street1" value="1 E 161st St" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="to_city" value="Bronx" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="to_state" value="NY" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ZIP Code</label>
+                            <input type="text" name="to_zip" value="10451" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="to_country" value="US" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="address-section">
+                    <h3>Parcel & Service</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Length (inches)</label>
+                            <input type="number" name="parcel_length" value="10" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Width (inches)</label>
+                            <input type="number" name="parcel_width" value="8" step="0.1" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Height (inches)</label>
+                            <input type="number" name="parcel_height" value="4" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (ounces)</label>
+                            <input type="number" name="parcel_weight" value="16" step="0.1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Carrier (e.g., USPS, UPS, FedEx)</label>
+                        <input type="text" name="carrier" value="USPS" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Service (e.g., First, Priority, Ground)</label>
+                        <input type="text" name="service" value="First" required>
+                    </div>
+                </div>
+
+                <button type="submit">Create Shipping Label</button>
+            </form>
+
+            <div id="labelResponse" class="response"></div>
+        </div>
+
+        <!-- Track Shipment Tab -->
+        <div id="track" class="tab-content">
+            <div class="info-box">
+                <p><strong>Track Shipment:</strong> Get tracking information for a shipment.</p>
+                <p>Enter a tracking code to see the current status and delivery history.</p>
+            </div>
+
+            <form id="trackForm">
+                <div class="form-group">
+                    <label>Tracking Code</label>
+                    <input type="text" name="tracking_code" placeholder="e.g., 9400111899562537866839" required>
+                </div>
+
+                <button type="submit">Track Shipment</button>
+            </form>
+
+            <div id="trackResponse" class="response"></div>
+        </div>
+
+        <!-- Validate Address Tab -->
+        <div id="validate" class="tab-content">
+            <div class="info-box">
+                <p><strong>Validate Address:</strong> Verify and correct a shipping address.</p>
+                <p>EasyPost will check the address against USPS records and suggest corrections if needed.</p>
+            </div>
+
+            <form id="validateForm">
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" name="street1" placeholder="e.g., 388 Townsend St" required>
+                </div>
+                <div class="form-group">
+                    <label>Street Address 2 (optional)</label>
+                    <input type="text" name="street2" placeholder="Apt, Suite, etc.">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" name="city" placeholder="e.g., San Francisco" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" name="state" placeholder="e.g., CA" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ZIP Code</label>
+                        <input type="text" name="zip" placeholder="e.g., 94107" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" name="country" value="US" required>
+                    </div>
+                </div>
+
+                <button type="submit">Validate Address</button>
+            </form>
+
+            <div id="validateResponse" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function showLoading(responseId) {
+            const responseDiv = document.getElementById(responseId);
+            responseDiv.className = 'response';
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Processing request...</p></div>';
+        }
+
+        function showResponse(responseId, data, isError = false) {
+            const responseDiv = document.getElementById(responseId);
+            responseDiv.className = isError ? 'response error' : 'response success';
+            responseDiv.innerHTML = `
+                <h3>${isError ? 'Error' : 'Success'}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        function showRates(responseId, data) {
+            const responseDiv = document.getElementById(responseId);
+            responseDiv.className = 'response success';
+
+            if (!data.rates || data.rates.length === 0) {
+                responseDiv.innerHTML = '<h3>No Rates Available</h3><p>No shipping rates were returned.</p>';
+                return;
+            }
+
+            let html = '<h3>Available Shipping Rates</h3>';
+            data.rates.forEach(rate => {
+                html += `
+                    <div class="rate-card">
+                        <h4>${rate.carrier} - ${rate.service}</h4>
+                        <div class="rate-details">
+                            <div class="rate-detail"><strong>Rate:</strong> $${rate.rate}</div>
+                            <div class="rate-detail"><strong>Delivery Days:</strong> ${rate.delivery_days || 'N/A'}</div>
+                            <div class="rate-detail"><strong>Delivery Date:</strong> ${rate.delivery_date || 'N/A'}</div>
+                            <div class="rate-detail"><strong>Est. Delivery Date:</strong> ${rate.est_delivery_date || 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            responseDiv.innerHTML = html;
+        }
+
+        // Get Shipping Rates Form
+        document.getElementById('ratesForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('ratesResponse');
+
+            const formData = new FormData(e.target);
+            const payload = {
+                from_address: {
+                    name: formData.get('from_name'),
+                    street1: formData.get('from_street1'),
+                    city: formData.get('from_city'),
+                    state: formData.get('from_state'),
+                    zip: formData.get('from_zip'),
+                    country: formData.get('from_country'),
+                    phone: formData.get('from_phone')
+                },
+                to_address: {
+                    name: formData.get('to_name'),
+                    street1: formData.get('to_street1'),
+                    city: formData.get('to_city'),
+                    state: formData.get('to_state'),
+                    zip: formData.get('to_zip'),
+                    country: formData.get('to_country'),
+                    phone: formData.get('to_phone')
+                },
+                parcel: {
+                    length: parseFloat(formData.get('parcel_length')),
+                    width: parseFloat(formData.get('parcel_width')),
+                    height: parseFloat(formData.get('parcel_height')),
+                    weight: parseFloat(formData.get('parcel_weight'))
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/shipping/rates`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showResponse('ratesResponse', data, true);
+                } else {
+                    showRates('ratesResponse', data);
+                }
+            } catch (error) {
+                showResponse('ratesResponse', { error: error.message }, true);
+            }
+        });
+
+        // Create Label Form
+        document.getElementById('labelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('labelResponse');
+
+            const formData = new FormData(e.target);
+            const payload = {
+                from_address: {
+                    name: formData.get('from_name'),
+                    street1: formData.get('from_street1'),
+                    city: formData.get('from_city'),
+                    state: formData.get('from_state'),
+                    zip: formData.get('from_zip'),
+                    country: formData.get('from_country'),
+                    phone: formData.get('from_phone')
+                },
+                to_address: {
+                    name: formData.get('to_name'),
+                    street1: formData.get('to_street1'),
+                    city: formData.get('to_city'),
+                    state: formData.get('to_state'),
+                    zip: formData.get('to_zip'),
+                    country: formData.get('to_country'),
+                    phone: formData.get('to_phone')
+                },
+                parcel: {
+                    length: parseFloat(formData.get('parcel_length')),
+                    width: parseFloat(formData.get('parcel_width')),
+                    height: parseFloat(formData.get('parcel_height')),
+                    weight: parseFloat(formData.get('parcel_weight'))
+                },
+                carrier: formData.get('carrier'),
+                service: formData.get('service')
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/shipping/create-label`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showResponse('labelResponse', data, true);
+                } else {
+                    showResponse('labelResponse', data);
+                }
+            } catch (error) {
+                showResponse('labelResponse', { error: error.message }, true);
+            }
+        });
+
+        // Track Shipment Form
+        document.getElementById('trackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('trackResponse');
+
+            const formData = new FormData(e.target);
+            const trackingCode = formData.get('tracking_code');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/shipping/track/${trackingCode}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showResponse('trackResponse', data, true);
+                } else {
+                    showResponse('trackResponse', data);
+                }
+            } catch (error) {
+                showResponse('trackResponse', { error: error.message }, true);
+            }
+        });
+
+        // Validate Address Form
+        document.getElementById('validateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading('validateResponse');
+
+            const formData = new FormData(e.target);
+            const payload = {
+                address: {
+                    street1: formData.get('street1'),
+                    street2: formData.get('street2') || null,
+                    city: formData.get('city'),
+                    state: formData.get('state'),
+                    zip: formData.get('zip'),
+                    country: formData.get('country')
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/shipping/validate-address`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showResponse('validateResponse', data, true);
+                } else {
+                    showResponse('validateResponse', data);
+                }
+            } catch (error) {
+                showResponse('validateResponse', { error: error.message }, true);
+            }
+        });
+    </script>
+</body>
+</html>
