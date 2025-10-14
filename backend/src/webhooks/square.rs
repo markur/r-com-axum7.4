@@ -284,8 +284,11 @@ async fn handle_payment_updated(
     Ok(())
 }
 
-// Send order confirmation email (placeholder - integrate with your email service)
+// Send order confirmation email using lettre
 async fn send_order_confirmation_email(email: &str, order_id: &str, amount: i64) {
+    use crate::lettre_email::EmailConfig;
+    use lettre::{Message, SmtpTransport, Transport, message::header::ContentType, transport::smtp::authentication::Credentials};
+
     println!(
         "Sending order confirmation email to {} for order {} (${:.2})",
         email,
@@ -293,6 +296,93 @@ async fn send_order_confirmation_email(email: &str, order_id: &str, amount: i64)
         amount as f64 / 100.0
     );
 
-    // TODO: Integrate with lettre_email module
-    // For now, just log the email that would be sent
+    // Try to get email config
+    let config = match EmailConfig::from_env() {
+        Some(c) => c,
+        None => {
+            eprintln!("Email not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL");
+            return;
+        }
+    };
+
+    // Build HTML email
+    let html_body = format!(
+        r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: #006aff; color: white; padding: 20px; text-align: center; }}
+        .content {{ padding: 20px; background: #f9f9f9; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+        .total {{ font-size: 18px; font-weight: bold; margin: 20px 0; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Payment Successful!</h1>
+        </div>
+        <div class="content">
+            <p>Hi there,</p>
+            <p>Thank you for your payment via Square! Your transaction has been completed successfully.</p>
+            <p><strong>Payment ID:</strong> {}</p>
+            <p class="total">Amount Paid: ${:.2}</p>
+            <p>We've received your payment and will process your order shortly. You'll receive a shipping confirmation email once your order ships.</p>
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+        </div>
+        <div class="footer">
+            <p>© 2025 R-Com Store. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+        "#,
+        order_id,
+        amount as f64 / 100.0
+    );
+
+    // Send email using helper function
+    match send_html_email(&config, email, &format!("Payment Confirmation - {}", order_id), &html_body).await {
+        Ok(_) => println!("✓ Order confirmation email sent to {}", email),
+        Err(e) => eprintln!("✗ Failed to send email: {}", e),
+    }
+}
+
+// Helper function to send HTML email
+async fn send_html_email(config: &crate::lettre_email::EmailConfig, to: &str, subject: &str, html_body: &str) -> Result<(), String> {
+    use lettre::{Message, SmtpTransport, Transport, message::header::ContentType, transport::smtp::authentication::Credentials};
+
+    let from_mailbox = format!("{} <{}>", config.from_name, config.from_email)
+        .parse()
+        .map_err(|e| format!("Invalid from address: {}", e))?;
+
+    let to_mailbox = to.parse()
+        .map_err(|e| format!("Invalid to address: {}", e))?;
+
+    let email = Message::builder()
+        .from(from_mailbox)
+        .to(to_mailbox)
+        .subject(subject)
+        .header(ContentType::TEXT_HTML)
+        .body(html_body.to_string())
+        .map_err(|e| format!("Failed to build email: {}", e))?;
+
+    let creds = Credentials::new(
+        config.smtp_username.clone(),
+        config.smtp_password.clone(),
+    );
+
+    let mailer = SmtpTransport::starttls_relay(&config.smtp_host)
+        .map_err(|e| format!("Failed to create SMTP relay: {}", e))?
+        .port(config.smtp_port)
+        .credentials(creds)
+        .build();
+
+    mailer.send(&email)
+        .map_err(|e| format!("Failed to send email: {}", e))?;
+
+    Ok(())
 }

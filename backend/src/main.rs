@@ -38,6 +38,7 @@ mod admin_auth;
 mod admin_products;
 mod square_payments;
 mod lettre_email;
+mod brevo_email;
 mod textbelt_sms;
 mod easypost_shipping;
 mod webhooks;
@@ -94,6 +95,7 @@ async fn main() {
         .merge(admin_products::admin_product_routes(app_state.clone()))// Admin product management
         .merge(square_payments::square_payment_routes(app_state.clone())) // Square payment processing
         .merge(lettre_email::lettre_email_routes(app_state.clone()))     // Lettre transactional emails
+        .merge(brevo_email::brevo_email_routes(app_state.clone()))       // Brevo email marketing
         .merge(textbelt_sms::textbelt_sms_routes(app_state.clone()))    // Textbelt SMS notifications
         .merge(easypost_shipping::easypost_shipping_routes(app_state.clone())) // EasyPost shipping
         .merge(webhooks::webhook_routes(app_state.clone()))            // Payment webhooks (Stripe, Square)

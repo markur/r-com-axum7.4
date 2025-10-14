@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brevo Email Marketing API Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge.pending {
+            background: #ffc107;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Brevo Email Marketing API Test</h1>
+        <p class="subtitle">Test Brevo's transactional email and marketing features</p>
+
+        <!-- Send Email Section -->
+        <div class="section">
+            <h2>📧 Send Transactional Email</h2>
+            <div class="form-group">
+                <label for="to_email">Recipient Email:</label>
+                <input type="email" id="to_email" placeholder="recipient@example.com" value="">
+            </div>
+            <div class="form-group">
+                <label for="to_name">Recipient Name (Optional):</label>
+                <input type="text" id="to_name" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" placeholder="Welcome to R-Com!" value="Test Email from Brevo">
+            </div>
+            <div class="form-group">
+                <label for="html_content">HTML Content:</label>
+                <textarea id="html_content" placeholder="<html><body><h1>Hello!</h1></body></html>"><!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #667eea; color: white; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test Email from R-Com</h1>
+        </div>
+        <div style="padding: 20px;">
+            <p>This is a test email sent via Brevo API!</p>
+            <p>If you're seeing this, the integration is working perfectly.</p>
+        </div>
+    </div>
+</body>
+</html></textarea>
+            </div>
+            <button onclick="sendEmail()">Send Email</button>
+            <div id="sendEmailResult" class="result hidden"></div>
+        </div>
+
+        <!-- Add Contact Section -->
+        <div class="section">
+            <h2>👤 Add Contact to Brevo</h2>
+            <div class="form-group">
+                <label for="contact_email">Email:</label>
+                <input type="email" id="contact_email" placeholder="contact@example.com">
+            </div>
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" placeholder="John">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" placeholder="Doe">
+            </div>
+            <button onclick="addContact()">Add Contact</button>
+            <div id="addContactResult" class="result hidden"></div>
+        </div>
+
+        <!-- Get Lists Section -->
+        <div class="section">
+            <h2>📋 Get Contact Lists</h2>
+            <p style="margin-bottom: 15px; color: #666;">Retrieve all contact lists from your Brevo account.</p>
+            <button onclick="getLists()">Get Lists</button>
+            <div id="getListsResult" class="result hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        async function sendEmail() {
+            const resultDiv = document.getElementById('sendEmailResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Sending email...';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/brevo/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to_email: document.getElementById('to_email').value,
+                        to_name: document.getElementById('to_name').value || null,
+                        subject: document.getElementById('subject').value,
+                        html_content: document.getElementById('html_content').value,
+                        text_content: "This is a test email from R-Com via Brevo API",
+                        tags: ["test", "brevo-integration"]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Email sent successfully!\n\nMessage ID: ${data.message_id}\nProvider: ${data.provider}\n\nResponse: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(data.error || 'Failed to send email');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Error: ${error.message}`;
+            }
+        }
+
+        async function addContact() {
+            const resultDiv = document.getElementById('addContactResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Adding contact...';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/brevo/add-contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('contact_email').value,
+                        first_name: document.getElementById('first_name').value || null,
+                        last_name: document.getElementById('last_name').value || null,
+                        attributes: null,
+                        list_ids: null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Contact added successfully!\n\nResponse: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(data.error || 'Failed to add contact');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Error: ${error.message}`;
+            }
+        }
+
+        async function getLists() {
+            const resultDiv = document.getElementById('getListsResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Fetching lists...';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/brevo/lists`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Lists retrieved successfully!\n\nResponse: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(data.error || 'Failed to get lists');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
