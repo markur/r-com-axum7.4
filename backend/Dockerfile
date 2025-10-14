@@ -2,8 +2,8 @@
 FROM rust:latest AS builder
 WORKDIR /app
 
-# Install required tools for SQLx offline mode
-# RUN cargo install sqlx-cli --version 0.7.3 --no-default-features --features postgres
+# Accept DATABASE_URL as build argument (will be provided by docker-compose)
+ARG DATABASE_URL
 
 # Cache dependencies layer: copy manifest and build deps only
 COPY Cargo.toml Cargo.lock ./
@@ -15,6 +15,10 @@ RUN rm -rf src
 
 # Copy full source and build
 COPY . .
+
+# Set DATABASE_URL for sqlx macros during build
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Build and verify the binary exists
 RUN cargo build --release --bin backend && \
     ls -la /app/target/release && \

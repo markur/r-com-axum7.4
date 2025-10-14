@@ -40,6 +40,7 @@ mod square_payments;
 mod lettre_email;
 mod textbelt_sms;
 mod easypost_shipping;
+mod webhooks;
 
 // --- Shared application state for all handlers ---
 pub struct AppState {
@@ -95,6 +96,7 @@ async fn main() {
         .merge(lettre_email::lettre_email_routes(app_state.clone()))     // Lettre transactional emails
         .merge(textbelt_sms::textbelt_sms_routes(app_state.clone()))    // Textbelt SMS notifications
         .merge(easypost_shipping::easypost_shipping_routes(app_state.clone())) // EasyPost shipping
+        .merge(webhooks::webhook_routes(app_state.clone()))            // Payment webhooks (Stripe, Square)
         .layer(cors)                                                   // Add CORS middleware
         .with_state(app_state);                                       // Attach shared state, converts Router<Arc<AppState>> -> Router<()>
 

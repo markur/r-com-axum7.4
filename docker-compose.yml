@@ -15,6 +15,9 @@ services:
     build:
       context: ./backend
       shm_size: '2gb'
+      args:
+        - DATABASE_URL=postgres://postgres:postgres@db:5432/ecommerce
+      network: host
     command: ./backend
     env_file:
       - .env.docker
