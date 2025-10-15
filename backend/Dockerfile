@@ -13,11 +13,15 @@ RUN cargo fetch
 # Remove the stub before copying real source
 RUN rm -rf src
 
+# Copy sqlx offline mode files first (needed for compile-time verification)
+COPY .sqlxrc .sqlx ./
+COPY .sqlx .sqlx
+
 # Copy full source and build
 COPY . .
 
-# Set DATABASE_URL for sqlx macros during build
-ENV DATABASE_URL=${DATABASE_URL}
+# Enable sqlx offline mode (prevents database connection during build)
+ENV SQLX_OFFLINE=true
 
 # Build and verify the binary exists
 RUN cargo build --release --bin backend && \

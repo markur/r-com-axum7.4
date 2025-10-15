@@ -17,7 +17,6 @@ services:
       shm_size: '2gb'
       args:
         - DATABASE_URL=postgres://postgres:postgres@db:5432/ecommerce
-      network: host
     command: ./backend
     env_file:
       - .env.docker
@@ -98,6 +97,26 @@ services:
       - '10001:10001'
     depends_on:
       - enthusiast-api
+    restart: always
+
+  # Main React Frontend
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    ports:
+      - '5173:80'
+    depends_on:
+      - backend
+    restart: always
+
+  # HTML Test Files Server
+  html-test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.html-server
+    ports:
+      - '8080:8080'
     restart: always
 
 volumes:

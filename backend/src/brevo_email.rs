@@ -291,9 +291,12 @@ pub async fn send_email_handler(
         }
         Err(e) => {
             eprintln!("✗ Failed to send email via Brevo: {}", e);
-            Err((
+            Ok((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to send email: {}", e),
+                Json(json!({
+                    "success": false,
+                    "error": e
+                })),
             ))
         }
     }
@@ -337,9 +340,12 @@ pub async fn add_contact_handler(
         }
         Err(e) => {
             eprintln!("✗ Failed to add contact to Brevo: {}", e);
-            Err((
+            Ok((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to add contact: {}", e),
+                Json(json!({
+                    "success": false,
+                    "error": e
+                })),
             ))
         }
     }
@@ -360,9 +366,12 @@ pub async fn get_lists_handler(
         Ok(lists) => Ok((StatusCode::OK, Json(lists))),
         Err(e) => {
             eprintln!("✗ Failed to get contact lists from Brevo: {}", e);
-            Err((
+            Ok((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to get contact lists: {}", e),
+                Json(json!({
+                    "success": false,
+                    "error": e
+                })),
             ))
         }
     }
@@ -444,13 +453,12 @@ pub async fn send_welcome_email(
 // Router Function for Axum Integration
 // ============================================================================
 
-use axum::routing::{post, get};
+use axum::{routing::{post, get}, Router};
 
 /// Create Brevo email marketing routes
-pub fn brevo_email_routes(state: Arc<AppState>) -> Router {
+pub fn brevo_email_routes(_state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .route("/api/brevo/send-email", post(send_email_handler))
         .route("/api/brevo/add-contact", post(add_contact_handler))
         .route("/api/brevo/lists", get(get_lists_handler))
-        .with_state(state)
 }
