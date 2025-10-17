@@ -110,6 +110,17 @@ services:
       - backend
     restart: always
 
+  # Leptos WASM Frontend (Main E-Commerce Site)
+  frontend-leptos:
+    build:
+      context: ./frontend-leptos
+      dockerfile: Dockerfile
+    ports:
+      - '8081:80'
+    depends_on:
+      - backend
+    restart: always
+
   # HTML Test Files Server
   html-test-server:
     build:
